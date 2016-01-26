@@ -2,14 +2,19 @@
  * Created by valentin.gushan on 26.01.2016.
  */
 import {ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend} from 'angular2/http';
-import {Injectable, provide, Provider, Component, ViewChild, ItemDirective, Renderer} from 'angular2/core';
+import {Injectable, provide, Provider, Component, ViewChild, Renderer} from 'angular2/core';
 import {Observable} from 'rxjs/Observable';
+
+export const LOADING_BAR_PROVIDERS: any[] = [
+    Renderer,
+    provide(XHRBackend, { useClass: LoadingBarBackend })
+];
 
 @Component({
     selector: 'loading-bar',
     template: `
-        <div id="loading-bar-spinner" #loadingBbarSpinner><div class="spinner-icon"></div></div>
-        <div id="loading-bar"><div class="bar" #loadingBar><div class="peg"></div></div></div>
+        <div id="loading-bar-spinner" #loadingBarSpinner><div class="spinner-icon"></div></div>
+        <div id="loading-bar" #loadingBarContainer><div class="bar" #loadingBar><div class="peg"></div></div></div>
     `,
     styles: [`
         /* Make clicks pass-through */
@@ -117,8 +122,9 @@ import {Observable} from 'rxjs/Observable';
         }`]
 })
 export class LoadingBar {
-    @ViewChild('loadingBbarSpinner') _spinner: ItemDirective;
-    @ViewChild('loadingBar') _loadingBar: ItemDirective;
+    @ViewChild('loadingBarSpinner') _spinner: any;
+    @ViewChild('loadingBarContainer') _loadingBarContainer: any;
+    @ViewChild('loadingBar') _loadingBar: any;
 
     private _autoIncrement: boolean = true;
     private _includeSpinner: boolean = true;
@@ -128,32 +134,55 @@ export class LoadingBar {
 
     private _started: boolean = true;
     private _status: number = 0;
+
     private _incTimeout:any;
+    private _completeTimeout:any;
 
-    constructor(private _renderer: Renderer) {
-    }
-
-    public static get provider(): Provider {
-        LoadingBarConnection.pending.subscribe((progressStart) => {
-            console.log('progressStar: ', progressStart)
-        });
-
-        return provide(XHRBackend, { useClass: LoadingBarBackend });
-    }
+    constructor(private _renderer: Renderer) {}
 
     public ngAfterViewInit() {
-        this.set(this._startSize);
+        this.hide(this._loadingBarContainer);
+        this.hide(this._spinner);
+
+        // subscribe on http activity and update progress
+        LoadingBarConnection.pending.subscribe((progressStart) => {
+            console.log('progressStar: ', progressStart);
+
+            if (progressStart) this.start();
+            else this.complete();
+        });
     }
 
+    /**
+     * Inserts the loading bar element into the dom, and sets it to 2%
+     */
+    public start(): void {
+        clearTimeout(this._completeTimeout);
+
+        // do not continually broadcast the started event:
+        if (this._started) { return; }
+
+        this._started = true;
+
+        if (this._includeBar) {
+            this.show(this._loadingBarContainer);
+        }
+
+        if (this._includeSpinner) {
+            this.show(this._spinner);
+        }
+
+        this.set(this._startSize);
+    }
     /**
      * Set the loading bar's width to a certain percent.
      *
      * @param n any value between 0 and 1
      */
-    private set(n): void {
+    public set(n): void {
         if (!this._started) { return; }
         var pct = (n * 100) + '%';
-        this._renderer.setElementStyle(this._loadingBar.nativeElement, "width", pct);
+        this.setElementStyle(this._loadingBar, "width", pct);
         //this._loadingBar.nativeElement.style.width = pct;
         this._status = n;
 
@@ -172,7 +201,7 @@ export class LoadingBar {
      * Increments the loading bar by a random amount
      * but slows down as it progresses
      */
-    private inc():void {
+    private inc(): void {
         if (this._status >= 1) {
             return;
         }
@@ -202,13 +231,28 @@ export class LoadingBar {
         var pct = this._status + rnd;
         this.set(pct);
     }
-}
 
-@Injectable()
-export class LoadingBarBackend implements ConnectionBackend {
-    constructor(private _browserXHR: BrowserXhr, private _baseResponseOptions: ResponseOptions) { }
-    public createConnection(request: Request): LoadingBarConnection {
-        return new LoadingBarConnection(request, this._browserXHR, this._baseResponseOptions);
+    public complete(): void {
+
+        this.set(1);
+
+        clearTimeout(this._completeTimeout);
+
+        // Attempt to aggregate any start/complete calls within 500ms:
+        this._completeTimeout = setTimeout(() => {
+            this.hide(this._loadingBarContainer);
+            this.hide(this._spinner);
+        }, 500);
+    }
+
+    private show(el:any): void {
+        this.setElementStyle(el, "display", "block");
+    }
+    private hide(el:any): void {
+        this.setElementStyle(el, "display", "none");
+    }
+    private setElementStyle(el:any, styleName: string, styleValue: string): void {
+        this._renderer.setElementStyle(el.nativeElement, styleName, styleValue);
     }
 }
 
@@ -248,5 +292,13 @@ export class LoadingBarConnection implements Connection {
     }
     get response(): Observable<Response> {
         return this.baseConnection.response;
+    }
+}
+
+@Injectable()
+export class LoadingBarBackend implements ConnectionBackend {
+    constructor(private _browserXHR: BrowserXhr, private _baseResponseOptions: ResponseOptions) { }
+    public createConnection(request: Request): LoadingBarConnection {
+        return new LoadingBarConnection(request, this._browserXHR, this._baseResponseOptions);
     }
 }
