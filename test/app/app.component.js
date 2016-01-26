@@ -1,4 +1,4 @@
-System.register(['angular2/core', './app.service'], function(exports_1) {
+System.register(['angular2/core', './app.service', 'src/loading.bar'], function(exports_1) {
     var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
         if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
         switch (arguments.length) {
@@ -10,7 +10,7 @@ System.register(['angular2/core', './app.service'], function(exports_1) {
     var __metadata = (this && this.__metadata) || function (k, v) {
         if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     };
-    var core_1, app_service_1;
+    var core_1, app_service_1, loading_bar_1;
     var AppComponent;
     return {
         setters:[
@@ -19,6 +19,9 @@ System.register(['angular2/core', './app.service'], function(exports_1) {
             },
             function (app_service_1_1) {
                 app_service_1 = app_service_1_1;
+            },
+            function (loading_bar_1_1) {
+                loading_bar_1 = loading_bar_1_1;
             }],
         execute: function() {
             AppComponent = (function () {
@@ -32,7 +35,8 @@ System.register(['angular2/core', './app.service'], function(exports_1) {
                 AppComponent = __decorate([
                     core_1.Component({
                         selector: 'my-app',
-                        template: "\n        <h1>LoadingBar Test App</h1>\n        {{ html }}\n    "
+                        template: "\n        <loading-bar></loading-bar>\n        <h1>LoadingBar Test App</h1>\n        {{ html }}",
+                        directives: [loading_bar_1.LoadingBar]
                     }), 
                     __metadata('design:paramtypes', [app_service_1.AppService])
                 ], AppComponent);
