@@ -2,14 +2,14 @@
  * Created by valentin.gushan on 26.01.2016.
  */
 import {ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend} from 'angular2/http';
-import {Injectable, provide, Provider, Component, ViewChild, ItemDirective} from 'angular2/core';
+import {Injectable, provide, Provider, Component, ViewChild, ItemDirective, Renderer} from 'angular2/core';
 import {Observable} from 'rxjs/Observable';
 
 @Component({
     selector: 'loading-bar',
     template: `
         <div id="loading-bar-spinner" #loadingBbarSpinner><div class="spinner-icon"></div></div>
-        <div id="loading-bar" #loadingBar><div class="bar"><div class="peg"></div></div></div>
+        <div id="loading-bar"><div class="bar" #loadingBar><div class="peg"></div></div></div>
     `,
     styles: [`
         /* Make clicks pass-through */
@@ -120,8 +120,18 @@ export class LoadingBar {
     @ViewChild('loadingBbarSpinner') _spinner: ItemDirective;
     @ViewChild('loadingBar') _loadingBar: ItemDirective;
 
+    private _autoIncrement: boolean = true;
+    private _includeSpinner: boolean = true;
+    private _includeBar: boolean = true;
+    private _latencyThreshold: number = 100;
+    private _startSize: number = 0.02;
+
     private _started: boolean = true;
-    private _status: number;
+    private _status: number = 0;
+    private _incTimeout:any;
+
+    constructor(private _renderer: Renderer) {
+    }
 
     public static get provider(): Provider {
         LoadingBarConnection.pending.subscribe((progressStart) => {
@@ -132,7 +142,7 @@ export class LoadingBar {
     }
 
     public ngAfterViewInit() {
-        this.set(50);
+        this.set(this._startSize);
     }
 
     /**
@@ -142,19 +152,55 @@ export class LoadingBar {
      */
     private set(n): void {
         if (!this._started) { return; }
-        var pct = n + '%';
-        this._loadingBar.nativeElement.style.width = pct;
+        var pct = (n * 100) + '%';
+        this._renderer.setElementStyle(this._loadingBar.nativeElement, "width", pct);
+        //this._loadingBar.nativeElement.style.width = pct;
         this._status = n;
 
         // increment loadingbar to give the illusion that there is always
         // progress but make sure to cancel the previous timeouts so we don't
         // have multiple incs running at the same time.
-        //if (autoIncrement) {
-        //    $timeout.cancel(incTimeout);
-        //    incTimeout = $timeout(function() {
-        //        _inc();
-        //    }, 250);
-        //}
+        if (this._autoIncrement) {
+            clearTimeout(this._incTimeout);
+            this._incTimeout = setTimeout(() => {
+                this.inc();
+            }, 250);
+        }
+    }
+
+    /**
+     * Increments the loading bar by a random amount
+     * but slows down as it progresses
+     */
+    private inc():void {
+        if (this._status >= 1) {
+            return;
+        }
+
+        var rnd = 0;
+
+        // TODO: do this mathmatically instead of through conditions
+
+        var stat = this._status;
+        if (stat >= 0 && stat < 0.25) {
+            // Start out between 3 - 6% increments
+            rnd = (Math.random() * (5 - 3 + 1) + 3) / 100;
+        } else if (stat >= 0.25 && stat < 0.65) {
+            // increment between 0 - 3%
+            rnd = (Math.random() * 3) / 100;
+        } else if (stat >= 0.65 && stat < 0.9) {
+            // increment between 0 - 2%
+            rnd = (Math.random() * 2) / 100;
+        } else if (stat >= 0.9 && stat < 0.99) {
+            // finally, increment it .5 %
+            rnd = 0.005;
+        } else {
+            // after 99%, don't increment:
+            rnd = 0;
+        }
+
+        var pct = this._status + rnd;
+        this.set(pct);
     }
 }
 

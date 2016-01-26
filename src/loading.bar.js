@@ -25,8 +25,15 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
             }],
         execute: function() {
             LoadingBar = (function () {
-                function LoadingBar() {
+                function LoadingBar(_renderer) {
+                    this._renderer = _renderer;
+                    this._autoIncrement = true;
+                    this._includeSpinner = true;
+                    this._includeBar = true;
+                    this._latencyThreshold = 100;
+                    this._startSize = 0.02;
                     this._started = true;
+                    this._status = 0;
                 }
                 Object.defineProperty(LoadingBar, "provider", {
                     get: function () {
@@ -39,7 +46,7 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     configurable: true
                 });
                 LoadingBar.prototype.ngAfterViewInit = function () {
-                    this.set(50);
+                    this.set(this._startSize);
                 };
                 /**
                  * Set the loading bar's width to a certain percent.
@@ -47,21 +54,57 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                  * @param n any value between 0 and 1
                  */
                 LoadingBar.prototype.set = function (n) {
+                    var _this = this;
                     if (!this._started) {
                         return;
                     }
-                    var pct = n + '%';
-                    this._loadingBar.nativeElement.style.width = pct;
+                    var pct = (n * 100) + '%';
+                    this._renderer.setElementStyle(this._loadingBar.nativeElement, "width", pct);
+                    //this._loadingBar.nativeElement.style.width = pct;
                     this._status = n;
                     // increment loadingbar to give the illusion that there is always
                     // progress but make sure to cancel the previous timeouts so we don't
                     // have multiple incs running at the same time.
-                    //if (autoIncrement) {
-                    //    $timeout.cancel(incTimeout);
-                    //    incTimeout = $timeout(function() {
-                    //        _inc();
-                    //    }, 250);
-                    //}
+                    if (this._autoIncrement) {
+                        clearTimeout(this._incTimeout);
+                        this._incTimeout = setTimeout(function () {
+                            _this.inc();
+                        }, 250);
+                    }
+                };
+                /**
+                 * Increments the loading bar by a random amount
+                 * but slows down as it progresses
+                 */
+                LoadingBar.prototype.inc = function () {
+                    if (this._status >= 1) {
+                        return;
+                    }
+                    var rnd = 0;
+                    // TODO: do this mathmatically instead of through conditions
+                    var stat = this._status;
+                    if (stat >= 0 && stat < 0.25) {
+                        // Start out between 3 - 6% increments
+                        rnd = (Math.random() * (5 - 3 + 1) + 3) / 100;
+                    }
+                    else if (stat >= 0.25 && stat < 0.65) {
+                        // increment between 0 - 3%
+                        rnd = (Math.random() * 3) / 100;
+                    }
+                    else if (stat >= 0.65 && stat < 0.9) {
+                        // increment between 0 - 2%
+                        rnd = (Math.random() * 2) / 100;
+                    }
+                    else if (stat >= 0.9 && stat < 0.99) {
+                        // finally, increment it .5 %
+                        rnd = 0.005;
+                    }
+                    else {
+                        // after 99%, don't increment:
+                        rnd = 0;
+                    }
+                    var pct = this._status + rnd;
+                    this.set(pct);
                 };
                 __decorate([
                     core_1.ViewChild('loadingBbarSpinner'), 
@@ -74,10 +117,10 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                 LoadingBar = __decorate([
                     core_1.Component({
                         selector: 'loading-bar',
-                        template: "\n        <div id=\"loading-bar-spinner\" #loadingBbarSpinner><div class=\"spinner-icon\"></div></div>\n        <div id=\"loading-bar\" #loadingBar><div class=\"bar\"><div class=\"peg\"></div></div></div>\n    ",
+                        template: "\n        <div id=\"loading-bar-spinner\" #loadingBbarSpinner><div class=\"spinner-icon\"></div></div>\n        <div id=\"loading-bar\"><div class=\"bar\" #loadingBar><div class=\"peg\"></div></div></div>\n    ",
                         styles: ["\n        /* Make clicks pass-through */\n        #loading-bar,\n        #loading-bar-spinner {\n          pointer-events: none;\n          -webkit-pointer-events: none;\n          -webkit-transition: 350ms linear all;\n          -moz-transition: 350ms linear all;\n          -o-transition: 350ms linear all;\n          transition: 350ms linear all;\n        }\n\n        #loading-bar.ng-enter,\n        #loading-bar.ng-leave.ng-leave-active,\n        #loading-bar-spinner.ng-enter,\n        #loading-bar-spinner.ng-leave.ng-leave-active {\n          opacity: 0;\n        }\n\n        #loading-bar.ng-enter.ng-enter-active,\n        #loading-bar.ng-leave,\n        #loading-bar-spinner.ng-enter.ng-enter-active,\n        #loading-bar-spinner.ng-leave {\n          opacity: 1;\n        }\n\n        #loading-bar .bar {\n          -webkit-transition: width 350ms;\n          -moz-transition: width 350ms;\n          -o-transition: width 350ms;\n          transition: width 350ms;\n\n          background: #29d;\n          position: fixed;\n          z-index: 10002;\n          top: 0;\n          left: 0;\n          width: 100%;\n          height: 2px;\n          border-bottom-right-radius: 1px;\n          border-top-right-radius: 1px;\n        }\n\n        /* Fancy blur effect */\n        #loading-bar .peg {\n          position: absolute;\n          width: 70px;\n          right: 0;\n          top: 0;\n          height: 2px;\n          opacity: .45;\n          -moz-box-shadow: #29d 1px 0 6px 1px;\n          -ms-box-shadow: #29d 1px 0 6px 1px;\n          -webkit-box-shadow: #29d 1px 0 6px 1px;\n          box-shadow: #29d 1px 0 6px 1px;\n          -moz-border-radius: 100%;\n          -webkit-border-radius: 100%;\n          border-radius: 100%;\n        }\n\n        #loading-bar-spinner {\n          display: block;\n          position: fixed;\n          z-index: 10002;\n          top: 10px;\n          left: 10px;\n        }\n\n        #loading-bar-spinner .spinner-icon {\n          width: 14px;\n          height: 14px;\n\n          border:  solid 2px transparent;\n          border-top-color:  #29d;\n          border-left-color: #29d;\n          border-radius: 50%;\n\n          -webkit-animation: loading-bar-spinner 400ms linear infinite;\n          -moz-animation:    loading-bar-spinner 400ms linear infinite;\n          -ms-animation:     loading-bar-spinner 400ms linear infinite;\n          -o-animation:      loading-bar-spinner 400ms linear infinite;\n          animation:         loading-bar-spinner 400ms linear infinite;\n        }\n\n        @-webkit-keyframes loading-bar-spinner {\n          0%   { -webkit-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-moz-keyframes loading-bar-spinner {\n          0%   { -moz-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -moz-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-o-keyframes loading-bar-spinner {\n          0%   { -o-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -o-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-ms-keyframes loading-bar-spinner {\n          0%   { -ms-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -ms-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @keyframes loading-bar-spinner {\n          0%   { transform: rotate(0deg); }\n          100% { transform: rotate(360deg); }\n        }"]
                     }), 
-                    __metadata('design:paramtypes', [])
+                    __metadata('design:paramtypes', [core_1.Renderer])
                 ], LoadingBar);
                 return LoadingBar;
                 var _a, _b;
