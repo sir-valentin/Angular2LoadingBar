@@ -7,48 +7,48 @@ import {Observable} from 'rxjs/Observable';
 
 export class LoadingBar {
     public static get provider(): Provider {
-        ProgressIndicatorConnection.pending.subscribe((progressStart) => {
+        LoadingBarConnection.pending.subscribe((progressStart) => {
             console.log('progressStar: ', progressStart)
         });
 
-        return provide(XHRBackend, { useClass: ProgressIndicatorBackend });
+        return provide(XHRBackend, { useClass: LoadingBarBackend });
     }
 }
 
 @Injectable()
-export class ProgressIndicatorBackend implements ConnectionBackend {
+export class LoadingBarBackend implements ConnectionBackend {
     constructor(private _browserXHR: BrowserXhr, private _baseResponseOptions: ResponseOptions) { }
-    public createConnection(request: Request): ProgressIndicatorConnection {
-        return new ProgressIndicatorConnection(request, this._browserXHR, this._baseResponseOptions);
+    public createConnection(request: Request): LoadingBarConnection {
+        return new LoadingBarConnection(request, this._browserXHR, this._baseResponseOptions);
     }
 }
 
-export class ProgressIndicatorConnection implements Connection {
+export class LoadingBarConnection implements Connection {
     private baseConnection: XHRConnection;
     private static _pendingRequests: number = 0;
     private static _observer: Observable<Response>;
-    public static pending: Observable<boolean> = new Observable(observer => ProgressIndicatorConnection._observer = observer);
+    public static pending: Observable<boolean> = new Observable(observer => LoadingBarConnection._observer = observer);
 
     constructor(req: Request, browserXHR: BrowserXhr, baseResponseOptions?: ResponseOptions) {
         this.baseConnection = new XHRConnection(req, browserXHR, baseResponseOptions);
-        ProgressIndicatorConnection.requestStarted();
+        LoadingBarConnection.requestStarted();
         this.response.subscribe(() => {
-            ProgressIndicatorConnection.requestEnded();
+            LoadingBarConnection.requestEnded();
         });
     }
 
     private static requestStarted() {
-        if (ProgressIndicatorConnection._pendingRequests == 0) {
-            ProgressIndicatorConnection._observer.next(true);
+        if (LoadingBarConnection._pendingRequests == 0) {
+            LoadingBarConnection._observer.next(true);
         }
-        ProgressIndicatorConnection._pendingRequests++;
+        LoadingBarConnection._pendingRequests++;
     }
 
     private static requestEnded() {
-        if (ProgressIndicatorConnection._pendingRequests == 1) {
-            ProgressIndicatorConnection._observer.next(false);
+        if (LoadingBarConnection._pendingRequests == 1) {
+            LoadingBarConnection._observer.next(false);
         }
-        ProgressIndicatorConnection._pendingRequests--;
+        LoadingBarConnection._pendingRequests--;
     }
 
     get readyState(): ReadyState {
