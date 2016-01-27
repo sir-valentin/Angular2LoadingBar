@@ -3,30 +3,39 @@
  */
 import {bootstrap}    from 'angular2/platform/browser'
 import {ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend} from 'angular2/http';
-import {Injectable, provide, Provider, Component, ViewChild, Renderer} from 'angular2/core';
+import {Injectable, provide, Provider, Component, ViewChild, Renderer, Injector} from 'angular2/core';
 import {Observable} from 'rxjs/Observable';
 
 export class ProgressIndicator {
-    private static _loadingBarComponentInstance: LoadingBar;
+    public static _loadingBarComponentInstance: LoadingBar;
     public static get LOADING_BAR_PROVIDERS(): Provider[] {
         // create LoadingBar component and store to static var
-        bootstrap(LoadingBar, [Renderer]).then((result) => {
-            //debugger;
-            ProgressIndicator._loadingBarComponentInstance = result.instance;
-        });
+
+        //bootstrap(LoadingBar, [Renderer]).then((compRef) => {
+        //    ProgressIndicator._loadingBarComponentInstance = compRef.instance;
+        //});
+
+
 
         // subscribe on http activity and update progress
-        LoadingBarConnection.pending.subscribe((progressStart) => {
-            console.log('progressStar: ', progressStart);
-            console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
-            if (ProgressIndicator._loadingBarComponentInstance) ProgressIndicator._loadingBarComponentInstance.start();
+        LoadingBarConnection.pending.subscribe((progress:any) => {
+            setTimeout(() => {
+                console.log('progressStar: ', progress);
+                //console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
+                if (ProgressIndicator._loadingBarComponentInstance) {
+                    if (progress.started) ProgressIndicator._loadingBarComponentInstance.start();
+                    if (progress.completed) ProgressIndicator._loadingBarComponentInstance.complete();
+                }
+
+            }, 10);
         });
 
-        return [provide(XHRBackend, { useClass: LoadingBarBackend })];
+        return [ provide(XHRBackend, { useClass: LoadingBarBackend }) ];
     }
 }
 
 @Component({
+    selector: 'loading-bar',
     template: `
         <div id="loading-bar-spinner" #loadingBarSpinner><div class="spinner-icon"></div></div>
         <div id="loading-bar" #loadingBarContainer><div class="bar" #loadingBar><div class="peg"></div></div></div>
@@ -144,7 +153,7 @@ export class LoadingBar {
     private _autoIncrement: boolean = true;
     private _includeSpinner: boolean = true;
     private _includeBar: boolean = true;
-    private _latencyThreshold: number = 100;
+    private _latencyThreshold: number = 10;
     private _startSize: number = 0.02;
 
     private _started: boolean = false;
@@ -153,33 +162,56 @@ export class LoadingBar {
     private _incTimeout:any;
     private _completeTimeout:any;
 
-    constructor(private _renderer: Renderer) {}
+    private _startTimeout:any;
+
+    constructor(private _renderer: Renderer) {
+        //this.createView(this._renderer);
+        ProgressIndicator._loadingBarComponentInstance = this;
+    }
 
     public ngAfterViewInit() {
+        //debugger;
         this.hide(this._loadingBarContainer);
         this.hide(this._spinner);
+
+
+        //debugger;
+        this.start();
+    }
+
+    createView(renderer: Renderer) {
+        debugger;
+        let body = renderer.selectRootElement('h1');
+
+        //this._spinner = renderer.createElement(body, 'div');
+        //renderer.setElementAttribute(this._spinner, "id", "loading-bar-spinner");
+        //let spinnerIcon = renderer.createElement(this._spinner, 'div');
+        //renderer.setElementAttribute(spinnerIcon, "class", "spinner-icon");
     }
 
     /**
      * Inserts the loading bar element into the dom, and sets it to 2%
      */
     public start(): void {
-        clearTimeout(this._completeTimeout);
+        this._startTimeout = setTimeout(() => {
 
-        // do not continually broadcast the started event:
-        if (this._started) { return; }
+            clearTimeout(this._completeTimeout);
 
-        this._started = true;
+            // do not continually broadcast the started event:
+            if (this._started) { return; }
 
-        if (this._includeBar) {
-            this.show(this._loadingBarContainer);
-        }
+            this._started = true;
 
-        if (this._includeSpinner) {
-            this.show(this._spinner);
-        }
+            if (this._includeBar) {
+                this.show(this._loadingBarContainer);
+            }
 
-        this.set(this._startSize);
+            if (this._includeSpinner) {
+                this.show(this._spinner);
+            }
+
+            this.set(this._startSize);
+        }, this._latencyThreshold);
     }
     /**
      * Set the loading bar's width to a certain percent.
@@ -190,7 +222,6 @@ export class LoadingBar {
         if (!this._started) { return; }
         var pct = (n * 100) + '%';
         this.setElementStyle(this._loadingBar, "width", pct);
-        //this._loadingBar.nativeElement.style.width = pct;
         this._status = n;
 
         // increment loadingbar to give the illusion that there is always
@@ -244,6 +275,7 @@ export class LoadingBar {
         this.set(1);
 
         clearTimeout(this._completeTimeout);
+        clearTimeout(this._startTimeout);
 
         // Attempt to aggregate any start/complete calls within 500ms:
         this._completeTimeout = setTimeout(() => {
@@ -278,17 +310,21 @@ export class LoadingBarConnection implements Connection {
     }
 
     private static requestStarted() {
-        if (LoadingBarConnection._pendingRequests == 0) {
-            LoadingBarConnection._observer.next(true);
-        }
+        let started = (LoadingBarConnection._pendingRequests == 0);
         LoadingBarConnection._pendingRequests++;
+        LoadingBarConnection._observer.next({
+            started: started,
+            pendingRequests: LoadingBarConnection._pendingRequests
+        });
     }
 
     private static requestEnded() {
-        if (LoadingBarConnection._pendingRequests == 1) {
-            LoadingBarConnection._observer.next(false);
-        }
+        let completed = (LoadingBarConnection._pendingRequests == 1);
         LoadingBarConnection._pendingRequests--;
+        LoadingBarConnection._observer.next({
+            completed: completed,
+            pendingRequests: LoadingBarConnection._pendingRequests
+        });
     }
 
     get readyState(): ReadyState {

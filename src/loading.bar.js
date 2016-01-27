@@ -1,4 +1,4 @@
-System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 'rxjs/Observable'], function(exports_1) {
+System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(exports_1) {
     var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
         if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
         switch (arguments.length) {
@@ -10,13 +10,10 @@ System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 
     var __metadata = (this && this.__metadata) || function (k, v) {
         if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     };
-    var browser_1, http_1, core_1, Observable_1;
+    var http_1, core_1, Observable_1;
     var ProgressIndicator, LoadingBar, LoadingBarConnection, LoadingBarBackend;
     return {
         setters:[
-            function (browser_1_1) {
-                browser_1 = browser_1_1;
-            },
             function (http_1_1) {
                 http_1 = http_1_1;
             },
@@ -33,16 +30,21 @@ System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 
                 Object.defineProperty(ProgressIndicator, "LOADING_BAR_PROVIDERS", {
                     get: function () {
                         // create LoadingBar component and store to static var
-                        browser_1.bootstrap(LoadingBar, [core_1.Renderer]).then(function (result) {
-                            //debugger;
-                            ProgressIndicator._loadingBarComponentInstance = result.instance;
-                        });
+                        //bootstrap(LoadingBar, [Renderer]).then((compRef) => {
+                        //    ProgressIndicator._loadingBarComponentInstance = compRef.instance;
+                        //});
                         // subscribe on http activity and update progress
-                        LoadingBarConnection.pending.subscribe(function (progressStart) {
-                            console.log('progressStar: ', progressStart);
-                            console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
-                            if (ProgressIndicator._loadingBarComponentInstance)
-                                ProgressIndicator._loadingBarComponentInstance.start();
+                        LoadingBarConnection.pending.subscribe(function (progress) {
+                            setTimeout(function () {
+                                console.log('progressStar: ', progress);
+                                //console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
+                                if (ProgressIndicator._loadingBarComponentInstance) {
+                                    if (progress.started)
+                                        ProgressIndicator._loadingBarComponentInstance.start();
+                                    if (progress.completed)
+                                        ProgressIndicator._loadingBarComponentInstance.complete();
+                                }
+                            }, 10);
                         });
                         return [core_1.provide(http_1.XHRBackend, { useClass: LoadingBarBackend })];
                     },
@@ -58,32 +60,48 @@ System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 
                     this._autoIncrement = true;
                     this._includeSpinner = true;
                     this._includeBar = true;
-                    this._latencyThreshold = 100;
+                    this._latencyThreshold = 10;
                     this._startSize = 0.02;
                     this._started = false;
                     this._status = 0;
+                    //this.createView(this._renderer);
+                    ProgressIndicator._loadingBarComponentInstance = this;
                 }
                 LoadingBar.prototype.ngAfterViewInit = function () {
+                    //debugger;
                     this.hide(this._loadingBarContainer);
                     this.hide(this._spinner);
+                    //debugger;
+                    this.start();
+                };
+                LoadingBar.prototype.createView = function (renderer) {
+                    debugger;
+                    var body = renderer.selectRootElement('h1');
+                    //this._spinner = renderer.createElement(body, 'div');
+                    //renderer.setElementAttribute(this._spinner, "id", "loading-bar-spinner");
+                    //let spinnerIcon = renderer.createElement(this._spinner, 'div');
+                    //renderer.setElementAttribute(spinnerIcon, "class", "spinner-icon");
                 };
                 /**
                  * Inserts the loading bar element into the dom, and sets it to 2%
                  */
                 LoadingBar.prototype.start = function () {
-                    clearTimeout(this._completeTimeout);
-                    // do not continually broadcast the started event:
-                    if (this._started) {
-                        return;
-                    }
-                    this._started = true;
-                    if (this._includeBar) {
-                        this.show(this._loadingBarContainer);
-                    }
-                    if (this._includeSpinner) {
-                        this.show(this._spinner);
-                    }
-                    this.set(this._startSize);
+                    var _this = this;
+                    this._startTimeout = setTimeout(function () {
+                        clearTimeout(_this._completeTimeout);
+                        // do not continually broadcast the started event:
+                        if (_this._started) {
+                            return;
+                        }
+                        _this._started = true;
+                        if (_this._includeBar) {
+                            _this.show(_this._loadingBarContainer);
+                        }
+                        if (_this._includeSpinner) {
+                            _this.show(_this._spinner);
+                        }
+                        _this.set(_this._startSize);
+                    }, this._latencyThreshold);
                 };
                 /**
                  * Set the loading bar's width to a certain percent.
@@ -97,7 +115,6 @@ System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 
                     }
                     var pct = (n * 100) + '%';
                     this.setElementStyle(this._loadingBar, "width", pct);
-                    //this._loadingBar.nativeElement.style.width = pct;
                     this._status = n;
                     // increment loadingbar to give the illusion that there is always
                     // progress but make sure to cancel the previous timeouts so we don't
@@ -147,6 +164,7 @@ System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 
                     var _this = this;
                     this.set(1);
                     clearTimeout(this._completeTimeout);
+                    clearTimeout(this._startTimeout);
                     // Attempt to aggregate any start/complete calls within 500ms:
                     this._completeTimeout = setTimeout(function () {
                         _this.hide(_this._loadingBarContainer);
@@ -176,6 +194,7 @@ System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 
                 ], LoadingBar.prototype, "_loadingBar");
                 LoadingBar = __decorate([
                     core_1.Component({
+                        selector: 'loading-bar',
                         template: "\n        <div id=\"loading-bar-spinner\" #loadingBarSpinner><div class=\"spinner-icon\"></div></div>\n        <div id=\"loading-bar\" #loadingBarContainer><div class=\"bar\" #loadingBar><div class=\"peg\"></div></div></div>\n    ",
                         styles: ["\n        /* Make clicks pass-through */\n        #loading-bar,\n        #loading-bar-spinner {\n          pointer-events: none;\n          -webkit-pointer-events: none;\n          -webkit-transition: 350ms linear all;\n          -moz-transition: 350ms linear all;\n          -o-transition: 350ms linear all;\n          transition: 350ms linear all;\n        }\n\n        #loading-bar.ng-enter,\n        #loading-bar.ng-leave.ng-leave-active,\n        #loading-bar-spinner.ng-enter,\n        #loading-bar-spinner.ng-leave.ng-leave-active {\n          opacity: 0;\n        }\n\n        #loading-bar.ng-enter.ng-enter-active,\n        #loading-bar.ng-leave,\n        #loading-bar-spinner.ng-enter.ng-enter-active,\n        #loading-bar-spinner.ng-leave {\n          opacity: 1;\n        }\n\n        #loading-bar .bar {\n          -webkit-transition: width 350ms;\n          -moz-transition: width 350ms;\n          -o-transition: width 350ms;\n          transition: width 350ms;\n\n          background: #29d;\n          position: fixed;\n          z-index: 10002;\n          top: 0;\n          left: 0;\n          width: 100%;\n          height: 2px;\n          border-bottom-right-radius: 1px;\n          border-top-right-radius: 1px;\n        }\n\n        /* Fancy blur effect */\n        #loading-bar .peg {\n          position: absolute;\n          width: 70px;\n          right: 0;\n          top: 0;\n          height: 2px;\n          opacity: .45;\n          -moz-box-shadow: #29d 1px 0 6px 1px;\n          -ms-box-shadow: #29d 1px 0 6px 1px;\n          -webkit-box-shadow: #29d 1px 0 6px 1px;\n          box-shadow: #29d 1px 0 6px 1px;\n          -moz-border-radius: 100%;\n          -webkit-border-radius: 100%;\n          border-radius: 100%;\n        }\n\n        #loading-bar-spinner {\n          display: block;\n          position: fixed;\n          z-index: 10002;\n          top: 10px;\n          left: 10px;\n        }\n\n        #loading-bar-spinner .spinner-icon {\n          width: 14px;\n          height: 14px;\n\n          border:  solid 2px transparent;\n          border-top-color:  #29d;\n          border-left-color: #29d;\n          border-radius: 50%;\n\n          -webkit-animation: loading-bar-spinner 400ms linear infinite;\n          -moz-animation:    loading-bar-spinner 400ms linear infinite;\n          -ms-animation:     loading-bar-spinner 400ms linear infinite;\n          -o-animation:      loading-bar-spinner 400ms linear infinite;\n          animation:         loading-bar-spinner 400ms linear infinite;\n        }\n\n        @-webkit-keyframes loading-bar-spinner {\n          0%   { -webkit-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-moz-keyframes loading-bar-spinner {\n          0%   { -moz-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -moz-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-o-keyframes loading-bar-spinner {\n          0%   { -o-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -o-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-ms-keyframes loading-bar-spinner {\n          0%   { -ms-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -ms-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @keyframes loading-bar-spinner {\n          0%   { transform: rotate(0deg); }\n          100% { transform: rotate(360deg); }\n        }"]
                     }), 
@@ -193,16 +212,20 @@ System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 
                     });
                 }
                 LoadingBarConnection.requestStarted = function () {
-                    if (LoadingBarConnection._pendingRequests == 0) {
-                        LoadingBarConnection._observer.next(true);
-                    }
+                    var started = (LoadingBarConnection._pendingRequests == 0);
                     LoadingBarConnection._pendingRequests++;
+                    LoadingBarConnection._observer.next({
+                        started: started,
+                        pendingRequests: LoadingBarConnection._pendingRequests
+                    });
                 };
                 LoadingBarConnection.requestEnded = function () {
-                    if (LoadingBarConnection._pendingRequests == 1) {
-                        LoadingBarConnection._observer.next(false);
-                    }
+                    var completed = (LoadingBarConnection._pendingRequests == 1);
                     LoadingBarConnection._pendingRequests--;
+                    LoadingBarConnection._observer.next({
+                        completed: completed,
+                        pendingRequests: LoadingBarConnection._pendingRequests
+                    });
                 };
                 Object.defineProperty(LoadingBarConnection.prototype, "readyState", {
                     get: function () {
