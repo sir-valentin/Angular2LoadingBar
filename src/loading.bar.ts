@@ -1,17 +1,32 @@
 /**
  * Created by valentin.gushan on 26.01.2016.
  */
+import {bootstrap}    from 'angular2/platform/browser'
 import {ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend} from 'angular2/http';
 import {Injectable, provide, Provider, Component, ViewChild, Renderer} from 'angular2/core';
 import {Observable} from 'rxjs/Observable';
 
-export const LOADING_BAR_PROVIDERS: any[] = [
-    Renderer,
-    provide(XHRBackend, { useClass: LoadingBarBackend })
-];
+export class ProgressIndicator {
+    private static _loadingBarComponentInstance: LoadingBar;
+    public static get LOADING_BAR_PROVIDERS(): Provider[] {
+        // create LoadingBar component and store to static var
+        bootstrap(LoadingBar, [Renderer]).then((result) => {
+            //debugger;
+            ProgressIndicator._loadingBarComponentInstance = result.instance;
+        });
+
+        // subscribe on http activity and update progress
+        LoadingBarConnection.pending.subscribe((progressStart) => {
+            console.log('progressStar: ', progressStart);
+            console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
+            if (ProgressIndicator._loadingBarComponentInstance) ProgressIndicator._loadingBarComponentInstance.start();
+        });
+
+        return [provide(XHRBackend, { useClass: LoadingBarBackend })];
+    }
+}
 
 @Component({
-    selector: 'loading-bar',
     template: `
         <div id="loading-bar-spinner" #loadingBarSpinner><div class="spinner-icon"></div></div>
         <div id="loading-bar" #loadingBarContainer><div class="bar" #loadingBar><div class="peg"></div></div></div>
@@ -132,7 +147,7 @@ export class LoadingBar {
     private _latencyThreshold: number = 100;
     private _startSize: number = 0.02;
 
-    private _started: boolean = true;
+    private _started: boolean = false;
     private _status: number = 0;
 
     private _incTimeout:any;
@@ -143,14 +158,6 @@ export class LoadingBar {
     public ngAfterViewInit() {
         this.hide(this._loadingBarContainer);
         this.hide(this._spinner);
-
-        // subscribe on http activity and update progress
-        LoadingBarConnection.pending.subscribe((progressStart) => {
-            console.log('progressStar: ', progressStart);
-
-            if (progressStart) this.start();
-            else this.complete();
-        });
     }
 
     /**

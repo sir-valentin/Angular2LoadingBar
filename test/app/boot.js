@@ -18,7 +18,7 @@ System.register(['angular2/platform/browser', './app.component', './app.service'
                 loading_bar_1 = loading_bar_1_1;
             }],
         execute: function() {
-            browser_1.bootstrap(app_component_1.AppComponent, [app_service_1.AppService, http_1.HTTP_PROVIDERS, loading_bar_1.LOADING_BAR_PROVIDERS]);
+            browser_1.bootstrap(app_component_1.AppComponent, [app_service_1.AppService, http_1.HTTP_PROVIDERS, loading_bar_1.ProgressIndicator.LOADING_BAR_PROVIDERS]);
         }
     }
 });

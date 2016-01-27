@@ -1,4 +1,4 @@
-System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(exports_1) {
+System.register(['angular2/platform/browser', 'angular2/http', 'angular2/core', 'rxjs/Observable'], function(exports_1) {
     var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
         if (typeof Reflect === "object" && typeof Reflect.decorate === "function") return Reflect.decorate(decorators, target, key, desc);
         switch (arguments.length) {
@@ -10,10 +10,13 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
     var __metadata = (this && this.__metadata) || function (k, v) {
         if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     };
-    var http_1, core_1, Observable_1;
-    var LOADING_BAR_PROVIDERS, LoadingBar, LoadingBarConnection, LoadingBarBackend;
+    var browser_1, http_1, core_1, Observable_1;
+    var ProgressIndicator, LoadingBar, LoadingBarConnection, LoadingBarBackend;
     return {
         setters:[
+            function (browser_1_1) {
+                browser_1 = browser_1_1;
+            },
             function (http_1_1) {
                 http_1 = http_1_1;
             },
@@ -24,10 +27,31 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                 Observable_1 = Observable_1_1;
             }],
         execute: function() {
-            exports_1("LOADING_BAR_PROVIDERS", LOADING_BAR_PROVIDERS = [
-                core_1.Renderer,
-                core_1.provide(http_1.XHRBackend, { useClass: LoadingBarBackend })
-            ]);
+            ProgressIndicator = (function () {
+                function ProgressIndicator() {
+                }
+                Object.defineProperty(ProgressIndicator, "LOADING_BAR_PROVIDERS", {
+                    get: function () {
+                        // create LoadingBar component and store to static var
+                        browser_1.bootstrap(LoadingBar, [core_1.Renderer]).then(function (result) {
+                            //debugger;
+                            ProgressIndicator._loadingBarComponentInstance = result.instance;
+                        });
+                        // subscribe on http activity and update progress
+                        LoadingBarConnection.pending.subscribe(function (progressStart) {
+                            console.log('progressStar: ', progressStart);
+                            console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
+                            if (ProgressIndicator._loadingBarComponentInstance)
+                                ProgressIndicator._loadingBarComponentInstance.start();
+                        });
+                        return [core_1.provide(http_1.XHRBackend, { useClass: LoadingBarBackend })];
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
+                return ProgressIndicator;
+            })();
+            exports_1("ProgressIndicator", ProgressIndicator);
             LoadingBar = (function () {
                 function LoadingBar(_renderer) {
                     this._renderer = _renderer;
@@ -36,21 +60,12 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     this._includeBar = true;
                     this._latencyThreshold = 100;
                     this._startSize = 0.02;
-                    this._started = true;
+                    this._started = false;
                     this._status = 0;
                 }
                 LoadingBar.prototype.ngAfterViewInit = function () {
-                    var _this = this;
                     this.hide(this._loadingBarContainer);
                     this.hide(this._spinner);
-                    // subscribe on http activity and update progress
-                    LoadingBarConnection.pending.subscribe(function (progressStart) {
-                        console.log('progressStar: ', progressStart);
-                        if (progressStart)
-                            _this.start();
-                        else
-                            _this.complete();
-                    });
                 };
                 /**
                  * Inserts the loading bar element into the dom, and sets it to 2%
@@ -161,7 +176,6 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                 ], LoadingBar.prototype, "_loadingBar");
                 LoadingBar = __decorate([
                     core_1.Component({
-                        selector: 'loading-bar',
                         template: "\n        <div id=\"loading-bar-spinner\" #loadingBarSpinner><div class=\"spinner-icon\"></div></div>\n        <div id=\"loading-bar\" #loadingBarContainer><div class=\"bar\" #loadingBar><div class=\"peg\"></div></div></div>\n    ",
                         styles: ["\n        /* Make clicks pass-through */\n        #loading-bar,\n        #loading-bar-spinner {\n          pointer-events: none;\n          -webkit-pointer-events: none;\n          -webkit-transition: 350ms linear all;\n          -moz-transition: 350ms linear all;\n          -o-transition: 350ms linear all;\n          transition: 350ms linear all;\n        }\n\n        #loading-bar.ng-enter,\n        #loading-bar.ng-leave.ng-leave-active,\n        #loading-bar-spinner.ng-enter,\n        #loading-bar-spinner.ng-leave.ng-leave-active {\n          opacity: 0;\n        }\n\n        #loading-bar.ng-enter.ng-enter-active,\n        #loading-bar.ng-leave,\n        #loading-bar-spinner.ng-enter.ng-enter-active,\n        #loading-bar-spinner.ng-leave {\n          opacity: 1;\n        }\n\n        #loading-bar .bar {\n          -webkit-transition: width 350ms;\n          -moz-transition: width 350ms;\n          -o-transition: width 350ms;\n          transition: width 350ms;\n\n          background: #29d;\n          position: fixed;\n          z-index: 10002;\n          top: 0;\n          left: 0;\n          width: 100%;\n          height: 2px;\n          border-bottom-right-radius: 1px;\n          border-top-right-radius: 1px;\n        }\n\n        /* Fancy blur effect */\n        #loading-bar .peg {\n          position: absolute;\n          width: 70px;\n          right: 0;\n          top: 0;\n          height: 2px;\n          opacity: .45;\n          -moz-box-shadow: #29d 1px 0 6px 1px;\n          -ms-box-shadow: #29d 1px 0 6px 1px;\n          -webkit-box-shadow: #29d 1px 0 6px 1px;\n          box-shadow: #29d 1px 0 6px 1px;\n          -moz-border-radius: 100%;\n          -webkit-border-radius: 100%;\n          border-radius: 100%;\n        }\n\n        #loading-bar-spinner {\n          display: block;\n          position: fixed;\n          z-index: 10002;\n          top: 10px;\n          left: 10px;\n        }\n\n        #loading-bar-spinner .spinner-icon {\n          width: 14px;\n          height: 14px;\n\n          border:  solid 2px transparent;\n          border-top-color:  #29d;\n          border-left-color: #29d;\n          border-radius: 50%;\n\n          -webkit-animation: loading-bar-spinner 400ms linear infinite;\n          -moz-animation:    loading-bar-spinner 400ms linear infinite;\n          -ms-animation:     loading-bar-spinner 400ms linear infinite;\n          -o-animation:      loading-bar-spinner 400ms linear infinite;\n          animation:         loading-bar-spinner 400ms linear infinite;\n        }\n\n        @-webkit-keyframes loading-bar-spinner {\n          0%   { -webkit-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-moz-keyframes loading-bar-spinner {\n          0%   { -moz-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -moz-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-o-keyframes loading-bar-spinner {\n          0%   { -o-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -o-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @-ms-keyframes loading-bar-spinner {\n          0%   { -ms-transform: rotate(0deg);   transform: rotate(0deg); }\n          100% { -ms-transform: rotate(360deg); transform: rotate(360deg); }\n        }\n        @keyframes loading-bar-spinner {\n          0%   { transform: rotate(0deg); }\n          100% { transform: rotate(360deg); }\n        }"]
                     }), 

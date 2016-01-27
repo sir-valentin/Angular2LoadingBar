@@ -8,10 +8,8 @@ import {LoadingBar} from 'src/loading.bar';
 @Component({
     selector: 'my-app',
     template: `
-        <loading-bar></loading-bar>
         <h1>LoadingBar Test App</h1>
-        {{ html }}`,
-    directives: [LoadingBar]
+        {{ html }}`
 })
 export class AppComponent {
     public html:string;
