@@ -201,7 +201,6 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                         for (var _i = 1; _i < arguments.length; _i++) {
                             args[_i - 1] = arguments[_i];
                         }
-                        console.log(args);
                         return baseFn(function (responce) {
                             // call user subscribe callback
                             args[0](responce);

@@ -296,7 +296,6 @@ export class LoadingBarConnection implements Connection {
 
         overrideFn(this.baseConnection.response, 'subscribe',
             (baseFn, ...args) => {
-                console.log(args);
                 return baseFn((responce) => {
                     // call user subscribe callback
                     args[0](responce);
