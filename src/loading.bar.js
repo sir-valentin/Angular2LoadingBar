@@ -196,17 +196,12 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
             LoadingBarConnection = (function () {
                 function LoadingBarConnection(req, browserXHR, baseResponseOptions) {
                     this.baseConnection = new http_1.XHRConnection(req, browserXHR, baseResponseOptions);
-                    overrideFn(this.baseConnection.response, 'subscribe', function (baseFn) {
-                        var args = [];
-                        for (var _i = 1; _i < arguments.length; _i++) {
-                            args[_i - 1] = arguments[_i];
-                        }
-                        return baseFn(function (responce) {
-                            // call user subscribe callback
-                            args[0](responce);
-                            // responce recieved, end progress
+                    overrideFn(this.baseConnection.response, 'subscribe', function (baseFn, observerOrNext, error, complete) {
+                        return baseFn(observerOrNext, error, function () {
+                            if (complete)
+                                complete();
                             LoadingBarConnection.requestEnded();
-                        }, args[1], args[2]);
+                        });
                     });
                     LoadingBarConnection.requestStarted();
                     //this.baseConnection.response.subscribe(() => {

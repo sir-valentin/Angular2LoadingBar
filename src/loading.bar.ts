@@ -295,13 +295,11 @@ export class LoadingBarConnection implements Connection {
         this.baseConnection = new XHRConnection(req, browserXHR, baseResponseOptions);
 
         overrideFn(this.baseConnection.response, 'subscribe',
-            (baseFn, ...args) => {
-                return baseFn((responce) => {
-                    // call user subscribe callback
-                    args[0](responce);
-                    // responce recieved, end progress
+            (baseFn, observerOrNext, error, complete) => {
+                return baseFn(observerOrNext, error, () => {
+                    if (complete) complete();
                     LoadingBarConnection.requestEnded();
-                }, args[1], args[2]);
+                });
             }
         );
 
