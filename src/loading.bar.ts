@@ -4,7 +4,8 @@
 import {bootstrap}    from 'angular2/platform/browser'
 import {HTTP_PROVIDERS, ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend} from 'angular2/http';
 import {Injectable, provide, Provider, Component, ViewChild, Renderer, Injector} from 'angular2/core';
-import {Observable} from 'rxjs/Observable';
+import {Observable,Subscriber} from 'rxjs/Observable';
+import {MockBackend} from "../node_modules/angular2/ts/src/http/backends/mock_backend";
 
 @Component({
     selector: 'loading-bar',
@@ -122,6 +123,7 @@ export class LoadingBar {
     public static get HTTP_PROVIDERS(): any[] {
         // subscribe on http activity and update progress
         LoadingBarConnection.pending.subscribe((progress:any) => {
+            console.log('progress: ', progress);
             setTimeout(() => {
                 if (LoadingBar._loadingBarComponentInstance) {
                     if (progress.started) LoadingBar._loadingBarComponentInstance.start();
@@ -268,6 +270,21 @@ export class LoadingBar {
     }
 }
 
+function overrideFn(context, fnName, fn) {
+    var baseFn = context[fnName] || function noop() {};
+
+    context[fnName] = function overrideFunction() {
+        var args = arguments;
+        var params = Array.prototype.slice.call(args);
+
+        params.unshift(function () {
+            return baseFn.apply(this, arguments.length ? arguments : args);
+        }.bind(this));
+
+        return fn.apply(this, params);
+    };
+}
+
 export class LoadingBarConnection implements Connection {
     private baseConnection: XHRConnection;
     private static _pendingRequests: number = 0;
@@ -276,10 +293,20 @@ export class LoadingBarConnection implements Connection {
 
     constructor(req: Request, browserXHR: BrowserXhr, baseResponseOptions?: ResponseOptions) {
         this.baseConnection = new XHRConnection(req, browserXHR, baseResponseOptions);
+
+        overrideFn(this.baseConnection.response, 'subscribe',
+            (baseFn) => {
+                let result = baseFn();
+                LoadingBarConnection.requestEnded();
+                return result;
+            }
+        );
+
         LoadingBarConnection.requestStarted();
-        this.response.subscribe(() => {
-            LoadingBarConnection.requestEnded();
-        });
+
+        //this.baseConnection.response.subscribe(() => {
+        //    LoadingBarConnection.requestEnded();
+        //});
     }
 
     private static requestStarted() {
@@ -313,7 +340,9 @@ export class LoadingBarConnection implements Connection {
 
 @Injectable()
 export class LoadingBarBackend implements ConnectionBackend {
-    constructor(private _browserXHR: BrowserXhr, private _baseResponseOptions: ResponseOptions) { }
+    constructor(private _browserXHR: BrowserXhr, private _baseResponseOptions: ResponseOptions) {
+
+    }
     public createConnection(request: Request): LoadingBarConnection {
         return new LoadingBarConnection(request, this._browserXHR, this._baseResponseOptions);
     }

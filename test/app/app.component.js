@@ -50,3 +50,4 @@ System.register(['angular2/core', './app.service', 'src/loading.bar'], function(
         }
     }
 });
+//# sourceMappingURL=app.component.js.map

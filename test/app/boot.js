@@ -19,3 +19,5 @@ System.register(['angular2/platform/browser', './app.component', './app.service'
         }
     }
 });
+//zone.run()
+//# sourceMappingURL=boot.js.map

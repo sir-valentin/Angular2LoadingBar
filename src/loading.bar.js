@@ -12,6 +12,17 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
     };
     var http_1, core_1, Observable_1;
     var LoadingBar, LoadingBarConnection, LoadingBarBackend;
+    function overrideFn(context, fnName, fn) {
+        var baseFn = context[fnName] || function noop() { };
+        context[fnName] = function overrideFunction() {
+            var args = arguments;
+            var params = Array.prototype.slice.call(args);
+            params.unshift(function () {
+                return baseFn.apply(this, arguments.length ? arguments : args);
+            }.bind(this));
+            return fn.apply(this, params);
+        };
+    }
     return {
         setters:[
             function (http_1_1) {
@@ -40,6 +51,7 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     get: function () {
                         // subscribe on http activity and update progress
                         LoadingBarConnection.pending.subscribe(function (progress) {
+                            console.log('progress: ', progress);
                             setTimeout(function () {
                                 if (LoadingBar._loadingBarComponentInstance) {
                                     if (progress.started)
@@ -184,10 +196,15 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
             LoadingBarConnection = (function () {
                 function LoadingBarConnection(req, browserXHR, baseResponseOptions) {
                     this.baseConnection = new http_1.XHRConnection(req, browserXHR, baseResponseOptions);
-                    LoadingBarConnection.requestStarted();
-                    this.response.subscribe(function () {
+                    overrideFn(this.baseConnection.response, 'subscribe', function (baseFn) {
+                        var result = baseFn();
                         LoadingBarConnection.requestEnded();
+                        return result;
                     });
+                    LoadingBarConnection.requestStarted();
+                    //this.baseConnection.response.subscribe(() => {
+                    //    LoadingBarConnection.requestEnded();
+                    //});
                 }
                 LoadingBarConnection.requestStarted = function () {
                     var started = (LoadingBarConnection._pendingRequests == 0);
@@ -249,3 +266,4 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
         }
     }
 });
+//# sourceMappingURL=loading.bar.js.map
