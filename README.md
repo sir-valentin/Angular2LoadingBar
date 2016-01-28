@@ -5,7 +5,7 @@ Based on https://github.com/chieffancypants/angular-loading-bar and idea from
 (@rodrigouroz) https://github.com/rodrigouroz 
 [source from https://github.com/angular/angular/issues/2684]
 
-**Requirements:** AngularJS 2.0.0-beta.1+
+**Requirements:** Angular 2.0.0-beta.1+
 
 ## Usage:
 1. include the loading bar as a dependency for your app.
