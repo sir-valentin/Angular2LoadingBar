@@ -20,4 +20,4 @@ Based on https://github.com/chieffancypants/angular-loading-bar and idea from
 
 3. That's it -- you're done!
 
-#### Yes, this is not the best solution, but I don't have another at this moment
+#### Yes, this is not the best solution, but it works!
