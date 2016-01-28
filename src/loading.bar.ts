@@ -297,7 +297,9 @@ export class LoadingBarConnection implements Connection {
         overrideFn(this.baseConnection.response, 'subscribe',
             (baseFn) => {
                 let result = baseFn();
-                LoadingBarConnection.requestEnded();
+                setTimeout(() => {
+                    LoadingBarConnection.requestEnded();
+                }, 100);
                 return result;
             }
         );

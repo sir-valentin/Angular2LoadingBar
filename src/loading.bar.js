@@ -198,7 +198,9 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     this.baseConnection = new http_1.XHRConnection(req, browserXHR, baseResponseOptions);
                     overrideFn(this.baseConnection.response, 'subscribe', function (baseFn) {
                         var result = baseFn();
-                        LoadingBarConnection.requestEnded();
+                        setTimeout(function () {
+                            LoadingBarConnection.requestEnded();
+                        }, 100);
                         return result;
                     });
                     LoadingBarConnection.requestStarted();
