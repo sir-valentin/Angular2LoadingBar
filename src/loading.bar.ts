@@ -119,7 +119,7 @@ import {Observable} from 'rxjs/Observable';
 })
 export class LoadingBar {
     public static _loadingBarComponentInstance: LoadingBar;
-    public static get HTTP_PROVIDERS(): Provider[] {
+    public static get HTTP_PROVIDERS(): any[] {
         // subscribe on http activity and update progress
         LoadingBarConnection.pending.subscribe((progress:any) => {
             setTimeout(() => {
