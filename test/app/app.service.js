@@ -28,7 +28,7 @@ System.register(['angular2/core', 'angular2/http'], function(exports_1) {
                 AppService.prototype.getSomeData = function () {
                     var _this = this;
                     return new Promise(function (resolve, reject) {
-                        _this.http.get('http://kendo.cdn.telerik.com/2016.1.112/js/kendo.all.min.js').subscribe(function (html) {
+                        _this.http.get('http://pikabu.ru/').subscribe(function (html) {
                             resolve(html.text());
                         });
                     });

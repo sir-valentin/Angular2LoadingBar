@@ -26,16 +26,20 @@ System.register(['angular2/core', './app.service', 'src/loading.bar'], function(
         execute: function() {
             AppComponent = (function () {
                 function AppComponent(_service) {
-                    var _this = this;
                     this._service = _service;
+                    this.refresh();
+                }
+                AppComponent.prototype.refresh = function () {
+                    var _this = this;
+                    this.html = 'loading ...';
                     this._service.getSomeData().then(function (html) {
                         _this.html = html;
                     });
-                }
+                };
                 AppComponent = __decorate([
                     core_1.Component({
                         selector: 'my-app',
-                        template: "\n        <loading-bar></loading-bar>\n        <h1>LoadingBar Test App</h1>\n        {{ html }}",
+                        template: "\n        <loading-bar></loading-bar>\n        <h1>LoadingBar Test App</h1>\n        <button (click)=\"refresh()\">Refresh</button>\n        {{ html }}\n\n    ",
                         directives: [loading_bar_1.LoadingBar]
                     }), 
                     __metadata('design:paramtypes', [app_service_1.AppService])

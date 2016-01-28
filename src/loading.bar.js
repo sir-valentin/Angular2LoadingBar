@@ -34,20 +34,13 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     this._startSize = 0.02;
                     this._started = false;
                     this._status = 0;
-                    //this.createView(this._renderer);
                     LoadingBar._loadingBarComponentInstance = this;
                 }
                 Object.defineProperty(LoadingBar, "LOADING_BAR_PROVIDERS", {
                     get: function () {
-                        // create LoadingBar component and store to static var
-                        //bootstrap(LoadingBar, [Renderer]).then((compRef) => {
-                        //    ProgressIndicator._loadingBarComponentInstance = compRef.instance;
-                        //});
                         // subscribe on http activity and update progress
                         LoadingBarConnection.pending.subscribe(function (progress) {
                             setTimeout(function () {
-                                console.log('progressStar: ', progress);
-                                //console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
                                 if (LoadingBar._loadingBarComponentInstance) {
                                     if (progress.started)
                                         LoadingBar._loadingBarComponentInstance.start();
@@ -62,19 +55,8 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     configurable: true
                 });
                 LoadingBar.prototype.ngAfterViewInit = function () {
-                    //debugger;
                     this.hide(this._loadingBarContainer);
                     this.hide(this._spinner);
-                    //debugger;
-                    this.start();
-                };
-                LoadingBar.prototype.createView = function (renderer) {
-                    debugger;
-                    var body = renderer.selectRootElement('h1');
-                    //this._spinner = renderer.createElement(body, 'div');
-                    //renderer.setElementAttribute(this._spinner, "id", "loading-bar-spinner");
-                    //let spinnerIcon = renderer.createElement(this._spinner, 'div');
-                    //renderer.setElementAttribute(spinnerIcon, "class", "spinner-icon");
                 };
                 /**
                  * Inserts the loading bar element into the dom, and sets it to 2%
@@ -88,6 +70,7 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                             return;
                         }
                         _this._started = true;
+                        _this._status = 0;
                         if (_this._includeBar) {
                             _this.show(_this._loadingBarContainer);
                         }
@@ -161,6 +144,7 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     clearTimeout(this._startTimeout);
                     // Attempt to aggregate any start/complete calls within 500ms:
                     this._completeTimeout = setTimeout(function () {
+                        _this._started = false;
                         _this.hide(_this._loadingBarContainer);
                         _this.hide(_this._spinner);
                     }, 500);

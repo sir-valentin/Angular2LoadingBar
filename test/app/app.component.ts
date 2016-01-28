@@ -10,13 +10,21 @@ import {LoadingBar} from 'src/loading.bar';
     template: `
         <loading-bar></loading-bar>
         <h1>LoadingBar Test App</h1>
-        {{ html }}`,
+        <button (click)="refresh()">Refresh</button>
+        {{ html }}
+
+    `,
     directives: [LoadingBar]
 })
 export class AppComponent {
     public html:string;
 
     constructor(private _service:AppService) {
+        this.refresh();
+    }
+
+    refresh() {
+        this.html = 'loading ...';
         this._service.getSomeData().then((html:string) => {
             this.html = html;
         });

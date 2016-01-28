@@ -120,24 +120,13 @@ import {Observable} from 'rxjs/Observable';
 export class LoadingBar {
     public static _loadingBarComponentInstance: LoadingBar;
     public static get LOADING_BAR_PROVIDERS(): Provider[] {
-        // create LoadingBar component and store to static var
-
-        //bootstrap(LoadingBar, [Renderer]).then((compRef) => {
-        //    ProgressIndicator._loadingBarComponentInstance = compRef.instance;
-        //});
-
-
-
         // subscribe on http activity and update progress
         LoadingBarConnection.pending.subscribe((progress:any) => {
             setTimeout(() => {
-                console.log('progressStar: ', progress);
-                //console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
                 if (LoadingBar._loadingBarComponentInstance) {
                     if (progress.started) LoadingBar._loadingBarComponentInstance.start();
                     if (progress.completed) LoadingBar._loadingBarComponentInstance.complete();
                 }
-
             }, 10);
         });
 
@@ -163,28 +152,12 @@ export class LoadingBar {
     private _startTimeout:any;
 
     constructor(private _renderer: Renderer) {
-        //this.createView(this._renderer);
         LoadingBar._loadingBarComponentInstance = this;
     }
 
     public ngAfterViewInit() {
-        //debugger;
         this.hide(this._loadingBarContainer);
         this.hide(this._spinner);
-
-
-        //debugger;
-        this.start();
-    }
-
-    createView(renderer: Renderer) {
-        debugger;
-        let body = renderer.selectRootElement('h1');
-
-        //this._spinner = renderer.createElement(body, 'div');
-        //renderer.setElementAttribute(this._spinner, "id", "loading-bar-spinner");
-        //let spinnerIcon = renderer.createElement(this._spinner, 'div');
-        //renderer.setElementAttribute(spinnerIcon, "class", "spinner-icon");
     }
 
     /**
@@ -199,6 +172,7 @@ export class LoadingBar {
             if (this._started) { return; }
 
             this._started = true;
+            this._status = 0;
 
             if (this._includeBar) {
                 this.show(this._loadingBarContainer);
@@ -277,6 +251,7 @@ export class LoadingBar {
 
         // Attempt to aggregate any start/complete calls within 500ms:
         this._completeTimeout = setTimeout(() => {
+            this._started = false;
             this.hide(this._loadingBarContainer);
             this.hide(this._spinner);
         }, 500);
