@@ -2,7 +2,7 @@
  * Created by valentin.gushan on 26.01.2016.
  */
 import {bootstrap}    from 'angular2/platform/browser'
-import {ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend} from 'angular2/http';
+import {HTTP_PROVIDERS, ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend} from 'angular2/http';
 import {Injectable, provide, Provider, Component, ViewChild, Renderer, Injector} from 'angular2/core';
 import {Observable} from 'rxjs/Observable';
 
@@ -119,7 +119,7 @@ import {Observable} from 'rxjs/Observable';
 })
 export class LoadingBar {
     public static _loadingBarComponentInstance: LoadingBar;
-    public static get LOADING_BAR_PROVIDERS(): Provider[] {
+    public static get HTTP_PROVIDERS(): Provider[] {
         // subscribe on http activity and update progress
         LoadingBarConnection.pending.subscribe((progress:any) => {
             setTimeout(() => {
@@ -130,7 +130,7 @@ export class LoadingBar {
             }, 10);
         });
 
-        return [ provide(XHRBackend, { useClass: LoadingBarBackend }) ];
+        return [ HTTP_PROVIDERS, provide(XHRBackend, { useClass: LoadingBarBackend }) ];
     }
 
     @ViewChild('loadingBarSpinner') _spinner: any;

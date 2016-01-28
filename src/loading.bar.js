@@ -36,7 +36,7 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     this._status = 0;
                     LoadingBar._loadingBarComponentInstance = this;
                 }
-                Object.defineProperty(LoadingBar, "LOADING_BAR_PROVIDERS", {
+                Object.defineProperty(LoadingBar, "HTTP_PROVIDERS", {
                     get: function () {
                         // subscribe on http activity and update progress
                         LoadingBarConnection.pending.subscribe(function (progress) {
@@ -49,7 +49,7 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                                 }
                             }, 10);
                         });
-                        return [core_1.provide(http_1.XHRBackend, { useClass: LoadingBarBackend })];
+                        return [http_1.HTTP_PROVIDERS, core_1.provide(http_1.XHRBackend, { useClass: LoadingBarBackend })];
                     },
                     enumerable: true,
                     configurable: true
