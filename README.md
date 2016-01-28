@@ -9,7 +9,7 @@ Based on https://github.com/chieffancypants/angular-loading-bar and idea from
 1. include the loading bar as a dependency for your app.
 
     ```js
-    bootstrap(AppComponent, [ LoadingBar.LOADING_BAR_PROVIDERS ]);
+    bootstrap(AppComponent, [ LoadingBar.HTTP_PROVIDERS ]);
     ```
 
 2. render tag loading-bar int your root component (and set directive LoadingBar to component directives)
