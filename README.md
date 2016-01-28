@@ -11,6 +11,6 @@ bootstrap(AppComponent, [ LoadingBar.LOADING_BAR_PROVIDERS ]);
 
 root component set
 directive: LoadingBar
-and render <loading-bar></loading-bar> in template
+and render &lt;loading-bar&gt;%lt;/loading-bar&gt; in template
 
 Yes, this is not the best solution, but I don't have another at this moment
