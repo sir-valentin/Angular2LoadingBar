@@ -295,12 +295,14 @@ export class LoadingBarConnection implements Connection {
         this.baseConnection = new XHRConnection(req, browserXHR, baseResponseOptions);
 
         overrideFn(this.baseConnection.response, 'subscribe',
-            (baseFn) => {
-                let result = baseFn();
-                setTimeout(() => {
+            (baseFn, ...args) => {
+                console.log(args);
+                return baseFn((responce) => {
+                    // call user subscribe callback
+                    args[0](responce);
+                    // responce recieved, end progress
                     LoadingBarConnection.requestEnded();
-                }, 100);
-                return result;
+                }, args[1], args[2]);
             }
         );
 
