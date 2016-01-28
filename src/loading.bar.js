@@ -11,7 +11,7 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
         if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     };
     var http_1, core_1, Observable_1;
-    var ProgressIndicator, LoadingBar, LoadingBarConnection, LoadingBarBackend;
+    var LoadingBar, LoadingBarConnection, LoadingBarBackend;
     return {
         setters:[
             function (http_1_1) {
@@ -24,36 +24,6 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                 Observable_1 = Observable_1_1;
             }],
         execute: function() {
-            ProgressIndicator = (function () {
-                function ProgressIndicator() {
-                }
-                Object.defineProperty(ProgressIndicator, "LOADING_BAR_PROVIDERS", {
-                    get: function () {
-                        // create LoadingBar component and store to static var
-                        //bootstrap(LoadingBar, [Renderer]).then((compRef) => {
-                        //    ProgressIndicator._loadingBarComponentInstance = compRef.instance;
-                        //});
-                        // subscribe on http activity and update progress
-                        LoadingBarConnection.pending.subscribe(function (progress) {
-                            setTimeout(function () {
-                                console.log('progressStar: ', progress);
-                                //console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
-                                if (ProgressIndicator._loadingBarComponentInstance) {
-                                    if (progress.started)
-                                        ProgressIndicator._loadingBarComponentInstance.start();
-                                    if (progress.completed)
-                                        ProgressIndicator._loadingBarComponentInstance.complete();
-                                }
-                            }, 10);
-                        });
-                        return [core_1.provide(http_1.XHRBackend, { useClass: LoadingBarBackend })];
-                    },
-                    enumerable: true,
-                    configurable: true
-                });
-                return ProgressIndicator;
-            })();
-            exports_1("ProgressIndicator", ProgressIndicator);
             LoadingBar = (function () {
                 function LoadingBar(_renderer) {
                     this._renderer = _renderer;
@@ -65,8 +35,32 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                     this._started = false;
                     this._status = 0;
                     //this.createView(this._renderer);
-                    ProgressIndicator._loadingBarComponentInstance = this;
+                    LoadingBar._loadingBarComponentInstance = this;
                 }
+                Object.defineProperty(LoadingBar, "LOADING_BAR_PROVIDERS", {
+                    get: function () {
+                        // create LoadingBar component and store to static var
+                        //bootstrap(LoadingBar, [Renderer]).then((compRef) => {
+                        //    ProgressIndicator._loadingBarComponentInstance = compRef.instance;
+                        //});
+                        // subscribe on http activity and update progress
+                        LoadingBarConnection.pending.subscribe(function (progress) {
+                            setTimeout(function () {
+                                console.log('progressStar: ', progress);
+                                //console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
+                                if (LoadingBar._loadingBarComponentInstance) {
+                                    if (progress.started)
+                                        LoadingBar._loadingBarComponentInstance.start();
+                                    if (progress.completed)
+                                        LoadingBar._loadingBarComponentInstance.complete();
+                                }
+                            }, 10);
+                        });
+                        return [core_1.provide(http_1.XHRBackend, { useClass: LoadingBarBackend })];
+                    },
+                    enumerable: true,
+                    configurable: true
+                });
                 LoadingBar.prototype.ngAfterViewInit = function () {
                     //debugger;
                     this.hide(this._loadingBarContainer);

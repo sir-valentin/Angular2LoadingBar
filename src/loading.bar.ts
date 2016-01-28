@@ -6,34 +6,6 @@ import {ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnect
 import {Injectable, provide, Provider, Component, ViewChild, Renderer, Injector} from 'angular2/core';
 import {Observable} from 'rxjs/Observable';
 
-export class ProgressIndicator {
-    public static _loadingBarComponentInstance: LoadingBar;
-    public static get LOADING_BAR_PROVIDERS(): Provider[] {
-        // create LoadingBar component and store to static var
-
-        //bootstrap(LoadingBar, [Renderer]).then((compRef) => {
-        //    ProgressIndicator._loadingBarComponentInstance = compRef.instance;
-        //});
-
-
-
-        // subscribe on http activity and update progress
-        LoadingBarConnection.pending.subscribe((progress:any) => {
-            setTimeout(() => {
-                console.log('progressStar: ', progress);
-                //console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
-                if (ProgressIndicator._loadingBarComponentInstance) {
-                    if (progress.started) ProgressIndicator._loadingBarComponentInstance.start();
-                    if (progress.completed) ProgressIndicator._loadingBarComponentInstance.complete();
-                }
-
-            }, 10);
-        });
-
-        return [ provide(XHRBackend, { useClass: LoadingBarBackend }) ];
-    }
-}
-
 @Component({
     selector: 'loading-bar',
     template: `
@@ -146,6 +118,32 @@ export class ProgressIndicator {
         }`]
 })
 export class LoadingBar {
+    public static _loadingBarComponentInstance: LoadingBar;
+    public static get LOADING_BAR_PROVIDERS(): Provider[] {
+        // create LoadingBar component and store to static var
+
+        //bootstrap(LoadingBar, [Renderer]).then((compRef) => {
+        //    ProgressIndicator._loadingBarComponentInstance = compRef.instance;
+        //});
+
+
+
+        // subscribe on http activity and update progress
+        LoadingBarConnection.pending.subscribe((progress:any) => {
+            setTimeout(() => {
+                console.log('progressStar: ', progress);
+                //console.log('instance: ', ProgressIndicator._loadingBarComponentInstance);
+                if (LoadingBar._loadingBarComponentInstance) {
+                    if (progress.started) LoadingBar._loadingBarComponentInstance.start();
+                    if (progress.completed) LoadingBar._loadingBarComponentInstance.complete();
+                }
+
+            }, 10);
+        });
+
+        return [ provide(XHRBackend, { useClass: LoadingBarBackend }) ];
+    }
+
     @ViewChild('loadingBarSpinner') _spinner: any;
     @ViewChild('loadingBarContainer') _loadingBarContainer: any;
     @ViewChild('loadingBar') _loadingBar: any;
@@ -166,7 +164,7 @@ export class LoadingBar {
 
     constructor(private _renderer: Renderer) {
         //this.createView(this._renderer);
-        ProgressIndicator._loadingBarComponentInstance = this;
+        LoadingBar._loadingBarComponentInstance = this;
     }
 
     public ngAfterViewInit() {
