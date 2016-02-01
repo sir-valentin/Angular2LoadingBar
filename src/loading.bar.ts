@@ -297,10 +297,11 @@ export class LoadingBarConnection implements Connection {
         overrideFn(this.baseConnection.response, 'subscribe',
             (baseFn, observerOrNext, error, complete) => {
                 var callback = (fn) => {
+                    debugger;
                     if (fn) fn();
                     LoadingBarConnection.requestEnded();
                 };
-                return baseFn(observerOrNext,() => callback(error), () => callback(complete));
+                return baseFn(() => callback(observerOrNext),() => callback(error), () => callback(complete));
             }
         );
 
