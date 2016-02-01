@@ -296,20 +296,15 @@ export class LoadingBarConnection implements Connection {
 
         overrideFn(this.baseConnection.response, 'subscribe',
             (baseFn, observerOrNext, error, complete) => {
-                return baseFn(observerOrNext, error,
-                    () => {
-                        if (complete) complete();
-                        LoadingBarConnection.requestEnded();
-                    }
-                );
+                var callback = (fn) => {
+                    if (fn) fn();
+                    LoadingBarConnection.requestEnded();
+                };
+                return baseFn(observerOrNext,() => callback(error), () => callback(complete));
             }
         );
 
         LoadingBarConnection.requestStarted();
-
-        this.baseConnection.response.subscribe(() => {
-            LoadingBarConnection.requestEnded();
-        });
     }
 
     private static requestStarted() {
