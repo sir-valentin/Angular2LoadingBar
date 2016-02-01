@@ -204,9 +204,9 @@ System.register(['angular2/http', 'angular2/core', 'rxjs/Observable'], function(
                         });
                     });
                     LoadingBarConnection.requestStarted();
-                    //this.baseConnection.response.subscribe(() => {
-                    //    LoadingBarConnection.requestEnded();
-                    //});
+                    this.baseConnection.response.subscribe(function () {
+                        LoadingBarConnection.requestEnded();
+                    });
                 }
                 LoadingBarConnection.requestStarted = function () {
                     var started = (LoadingBarConnection._pendingRequests == 0);

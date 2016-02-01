@@ -2,9 +2,9 @@
  * Created by valentin.gushan on 26.01.2016.
  */
 import {bootstrap}    from 'angular2/platform/browser'
-import {HTTP_PROVIDERS, ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend} from 'angular2/http';
+import {HTTP_PROVIDERS, Http, ConnectionBackend, Connection, Request, Response, ReadyState, XHRConnection, BrowserXhr, ResponseOptions, XHRBackend, IRequestOptions} from 'angular2/http';
 import {Injectable, provide, Provider, Component, ViewChild, Renderer, Injector} from 'angular2/core';
-import {Observable,Subscriber} from 'rxjs/Observable';
+import {Observable, Subscriber} from 'rxjs/Observable';
 import {MockBackend} from "../node_modules/angular2/ts/src/http/backends/mock_backend";
 
 @Component({
@@ -122,7 +122,7 @@ export class LoadingBar {
     public static _loadingBarComponentInstance: LoadingBar;
     public static get HTTP_PROVIDERS(): any[] {
         // subscribe on http activity and update progress
-        LoadingBarConnection.pending.subscribe((progress:any) => {
+        LoadingBarConnection.pending.subscribe((progress: any) => {
             console.log('progress: ', progress);
             setTimeout(() => {
                 if (LoadingBar._loadingBarComponentInstance) {
@@ -132,7 +132,7 @@ export class LoadingBar {
             }, 10);
         });
 
-        return [ HTTP_PROVIDERS, provide(XHRBackend, { useClass: LoadingBarBackend }) ];
+        return [HTTP_PROVIDERS, provide(XHRBackend, { useClass: LoadingBarBackend })];
     }
 
     @ViewChild('loadingBarSpinner') _spinner: any;
@@ -148,10 +148,10 @@ export class LoadingBar {
     private _started: boolean = false;
     private _status: number = 0;
 
-    private _incTimeout:any;
-    private _completeTimeout:any;
+    private _incTimeout: any;
+    private _completeTimeout: any;
 
-    private _startTimeout:any;
+    private _startTimeout: any;
 
     constructor(private _renderer: Renderer) {
         LoadingBar._loadingBarComponentInstance = this;
@@ -259,19 +259,19 @@ export class LoadingBar {
         }, 500);
     }
 
-    private show(el:any): void {
+    private show(el: any): void {
         this.setElementStyle(el, "display", "block");
     }
-    private hide(el:any): void {
+    private hide(el: any): void {
         this.setElementStyle(el, "display", "none");
     }
-    private setElementStyle(el:any, styleName: string, styleValue: string): void {
+    private setElementStyle(el: any, styleName: string, styleValue: string): void {
         this._renderer.setElementStyle(el.nativeElement, styleName, styleValue);
     }
 }
 
 function overrideFn(context, fnName, fn) {
-    var baseFn = context[fnName] || function noop() {};
+    var baseFn = context[fnName] || function noop() { };
 
     context[fnName] = function overrideFunction() {
         var args = arguments;
@@ -307,9 +307,9 @@ export class LoadingBarConnection implements Connection {
 
         LoadingBarConnection.requestStarted();
 
-        //this.baseConnection.response.subscribe(() => {
-        //    LoadingBarConnection.requestEnded();
-        //});
+        this.baseConnection.response.subscribe(() => {
+            LoadingBarConnection.requestEnded();
+        });
     }
 
     private static requestStarted() {
@@ -344,7 +344,6 @@ export class LoadingBarConnection implements Connection {
 @Injectable()
 export class LoadingBarBackend implements ConnectionBackend {
     constructor(private _browserXHR: BrowserXhr, private _baseResponseOptions: ResponseOptions) {
-
     }
     public createConnection(request: Request): LoadingBarConnection {
         return new LoadingBarConnection(request, this._browserXHR, this._baseResponseOptions);
